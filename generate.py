@@ -43,7 +43,7 @@ if __name__ == '__main__':
         generate_image(input_image_path, save_image_path, image_size=64)
 
         lab_img = cv2.imread('dataset/label/img/label_image_%d.png'% pics[i])
-        gen_img = cv2.imread('results/mod_gen_%d.png'% pics[i])
+        gen_img = cv2.imread('results/gen_%d.png'% pics[i])
         gen_img = cv2.resize(gen_img, (160,120))
         rmse_err.append(rmse(gen_img, lab_img))
     print(np.mean(rmse_err))

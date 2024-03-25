@@ -72,6 +72,9 @@ def train(gen, dis, train_dl, OptimizerG, OptimizerD, L1_Loss, BCE_Loss, Gen_los
         Gen_loss.append(G_loss.item())
         Dis_loss.append(D_loss.item())
 
+def save_checkpoint(gen, dis, folder, epoch):
+    torch.save(gen.state_dict, folder + 'gen_' + str(epoch) + '.pth')
+    torch.save(dis.state_dict, folder + 'dis_' + str(epoch) + '.pth')
 def test_train_dataloader(train_dataloader, batch_size):
     for i, data in enumerate(train_dataloader, 0):
         inputs, labels = data
@@ -146,5 +149,5 @@ if __name__ == "__main__":
             torch.save(gen.state_dict(), 'check/gen_%d.pth' % epoch)
             torch.save(gen.state_dict(), 'check/dis_%d.pth' % epoch)
     test_examples(gen, test_dataloader, 'ex')
-    torch.save(gen.state_dict(), 'models/gen_pix.pth')
+    torch.save(gen.state_dict(), 'models/gen_64_120.pth')
     plot_loss(Gen_loss, Dis_loss)
