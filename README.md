@@ -12,5 +12,6 @@ Evaluated the error of the generated images and the labelled images by calculati
 
 ## References
 pix2pix research paper: https://arxiv.org/pdf/1611.07004.pdf
+
 pix2pix tutorial: https://medium.com/@Skpd/pix2pix-gan-for-generating-map-given-satellite-images-using-pytorch-6e50c318673a
 
