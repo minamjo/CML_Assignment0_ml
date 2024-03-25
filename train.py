@@ -8,13 +8,23 @@ from PIL import Image
 from torchvision.utils import save_image
 from tqdm import tqdm
 from model import *
+
+
 class MyDataset(data.Dataset):
-    def __init__(self, input_path, label_path, transform=None):
+    def __init__(self, input_path, label_path):
         self.input_path = [os.path.join(input_path, img_name) for img_name in os.listdir(input_path)]
         self.label_path = [os.path.join(label_path, img_name) for img_name in os.listdir(label_path)]
-        self.transform = transforms.Compose([
+        self.transform_lab = transforms.Compose([
             transforms.Resize(image_size),
             transforms.CenterCrop(image_size),
+            transforms.ToTensor(),
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+        ])
+        self.transform_inp = transforms.Compose([
+            transforms.Resize(image_size),
+            transforms.CenterCrop(image_size),
+            transforms.RandomHorizontalFlip(p=0.5),
+            transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),
             transforms.ToTensor(),
             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
         ])
@@ -22,9 +32,11 @@ class MyDataset(data.Dataset):
     def __getitem__(self, idx):
         img = Image.open(self.input_path[idx])
         label = Image.open(self.label_path[idx])
-        if self.transform:
-            img = self.transform(img)
-            label = self.transform(label)
+
+        if self.transform_lab:
+            label = self.transform_lab(label)
+        if self.transform_inp:
+            img = self.transform_inp(img)
         return img, label
 
     def __len__(self):
@@ -38,7 +50,7 @@ def test_examples(gen, test_dataloader, folder):
     with torch.no_grad():
         fake = gen(inp)
         fake = fake * 0.5 + 0.5
-        save_image(fake, folder + f"/gen.png")
+        save_image(fake, folder + "/gen.png")
         save_image(inp * 0.5 + 0.5, folder + "/input.png")
         save_image(out * 0.5 + 0.5, folder + "/label.png")
     gen.train()
@@ -73,8 +85,8 @@ def train(gen, dis, train_dl, OptimizerG, OptimizerD, L1_Loss, BCE_Loss, Gen_los
         Dis_loss.append(D_loss.item())
 
 def save_checkpoint(gen, dis, folder, epoch):
-    torch.save(gen.state_dict, folder + 'gen_' + str(epoch) + '.pth')
-    torch.save(dis.state_dict, folder + 'dis_' + str(epoch) + '.pth')
+    torch.save(gen.state_dict, folder + '/gen_' + str(epoch) + '.pth')
+    torch.save(dis.state_dict, folder + '/dis_' + str(epoch) + '.pth')
 def test_train_dataloader(train_dataloader, batch_size):
     for i, data in enumerate(train_dataloader, 0):
         inputs, labels = data
@@ -137,17 +149,15 @@ if __name__ == "__main__":
     OptimizerG = torch.optim.Adam(gen.parameters(), lr=lr, betas=(beta1, 0.999))
     BCE_Loss = nn.BCEWithLogitsLoss()
     L1_Loss = nn.L1Loss()
-    G_Scaler = torch.cuda.amp.GradScaler()
-    D_Scaler = torch.cuda.amp.GradScaler()
 
     for epoch in range(num_epochs):
         train(
-            gen, dis, train_dataloader, OptimizerG, OptimizerD, L1_Loss, BCE_Loss, G_Scaler, D_Scaler, Gen_loss, Dis_loss, l1_lambda
+            gen, dis, train_dataloader, OptimizerG, OptimizerD, L1_Loss, BCE_Loss, Gen_loss, Dis_loss, l1_lambda
         )
 
         if epoch % 5 == 0:
-            torch.save(gen.state_dict(), 'check/gen_%d.pth' % epoch)
-            torch.save(gen.state_dict(), 'check/dis_%d.pth' % epoch)
+            save_checkpoint(gen, dis, 'check')
+
     test_examples(gen, test_dataloader, 'ex')
     torch.save(gen.state_dict(), 'models/gen_64_120.pth')
     plot_loss(Gen_loss, Dis_loss)

@@ -68,7 +68,7 @@ class Generator(nn.Module):
 
 def testGen():
     x = torch.randn((1, 3, 64, 64))
-    model = Generator(in_channels=3, features=64)
+    model = Generator(in_channels=3, ngf=64)
     preds = model(x)
     print(preds.shape)
 

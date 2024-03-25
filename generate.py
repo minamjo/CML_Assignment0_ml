@@ -6,7 +6,7 @@ from PIL import Image
 import torchvision.transforms as transforms
 from torchvision.utils import save_image
 
-def generate_image(input_image_path, save_image_path, image_size, model_path='models/gen_pix_195.pth', device='cuda'):
+def generate_image(input_image_path, save_image_path, image_size, model_path='models/gen_64_120.pth', device='cuda'):
     # Load your model
     model = Generator(in_channels=3).to(device)
     model.load_state_dict(torch.load(model_path))
@@ -39,7 +39,7 @@ if __name__ == '__main__':
     rmse_err = list()
     for i in range(len(pics)):
         input_image_path = 'dataset/input/img/input_image_%d.png' % pics[i]
-        save_image_path = 'results/mod_gen_%d.png' % pics[i]
+        save_image_path = 'results/gen_%d.png' % pics[i]
         generate_image(input_image_path, save_image_path, image_size=64)
 
         lab_img = cv2.imread('dataset/label/img/label_image_%d.png'% pics[i])
